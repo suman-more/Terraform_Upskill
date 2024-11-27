@@ -1,0 +1,90 @@
+name: Deploy Python project to Azure Function Appsssss
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - stg
+      - qa
+      - suman/test-adf
+  workflow_dispatch:
+      
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './src/function-app/'
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        functionapp_name: [
+          'FUNCTIONAPP_NAME_EUW'
+        ]
+    environment: ${{ 
+      github.ref == 'refs/heads/master' && 'production' || 
+      github.ref == 'refs/heads/stg' && 'stg' || 
+      github.ref == 'refs/heads/suman/test-adf' && 'dev' ||
+      github.ref == 'refs/heads/qa' && 'qa'
+      }}
+    env:
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+    steps:
+    - name: 'Checkout GitHub Actionsss'
+      uses: actions/checkout@v2
+    - name: 'Az CLI login'
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.CLIENT_ID }}
+        tenant-id: ${{ secrets.TENANT_ID }}
+        subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+        auth-type: SERVICE_PRINCIPAL
+        enable-AzPSSession: true
+
+    - name: Setup Python Environment
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: 'Resolve Project Dependencies Using Pip'
+      shell: bash
+      run: |
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}' 
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+        popd
+    
+    # - name: Analysing the code with pylint
+    #   run: |
+    #     pylint $(git ls-files '*.py')
+
+    # - name: 'Run Linting with Flake8'
+    #   shell: bash
+    #   continue-on-error: true
+    #   run: |
+    #     flake8 .
+    # - name: 'set Function App Settings'
+    #   run: |
+    #     az functionapp config appsettings set --name ${{ vars[matrix.functionapp_name] }} --resource-group ${{ secrets.RESOURCE_GROUP }} --settings \
+    #       MMS_UPLOAD_URL=${{ vars.MMS_UPLOAD_URL}} \
+    #       MMS_DELIVERY_URL=${{ vars.MMS_DELIVERY_URL}} \
+    #       BRAND_KIT_API_URL=${{ vars.BRAND_KIT_API_URL}} \
+    #       DOCUMENT_API_URL=${{ vars.DOCUMENT_API_URL}} \
+    #       LLM_GATEWAY_ENDPOINT=${{ vars.LLM_GATEWAY_ENDPOINT}} \
+    #       LLM_GATEWAY_API_KEY=${{ secrets.LLM_GATEWAY_API_KEY}} \
+    #       USE_LLM_GATEWAY_ENDPOINT=${{ vars.USE_LLM_GATEWAY_ENDPOINT}} \
+    #       IDENTITY_URL=${{ vars.IDENTITY_URL}} \
+    #       IDENTITY_AUDIENCE=${{ vars.IDENTITY_AUDIENCE}} \
+    #       AZURE_OPENAI_API_KEY=${{ secrets.AZURE_OPENAI_API_KEY }} \
+    #       AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }}
+    
+        
+    - name: 'Deploy Function to Azure'
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ vars[matrix.functionapp_name] }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
