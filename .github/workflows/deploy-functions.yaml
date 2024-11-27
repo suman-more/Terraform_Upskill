@@ -22,7 +22,7 @@ jobs:
     environment: ${{ 
       github.ref == 'refs/heads/master' && 'production' || 
       github.ref == 'refs/heads/stg' && 'stg' || 
-      github.ref == 'refs/heads/suman/test-adf' && 'dev' ||
+      github.ref == 'refs/heads/main' && 'dev' ||
       github.ref == 'refs/heads/qa' && 'qa'
       }}
     env:
