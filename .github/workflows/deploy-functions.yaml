@@ -2,11 +2,7 @@ name: Deploy Python project to Azure Function Appsssss
 on:
   push:
     branches:
-      - master
-      - develop
-      - stg
-      - qa
-      - suman/test-adf
+      - main
   workflow_dispatch:
       
 permissions:
