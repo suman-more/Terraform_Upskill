@@ -45,13 +45,13 @@ jobs:
         pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}' 
         python -m pip install --upgrade pip
         pip install -r requirements.txt --target=".python_packages/lib/site-packages"
-        pip install flake8
         popd
         
     - name: 'Run Linting with Flake8'
       shell: bash
       continue-on-error: true
       run: |
+        pip install flake8
         flake8 .
     
     # - name: Analysing the code with pylint
