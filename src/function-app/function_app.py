@@ -3,8 +3,8 @@ import logging
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.route(route="http_trigger_name")
-def http_trigger_name(req: func.HttpRequest) -> func.HttpResponse:
+@app.route(route="http_trigger_names")
+def http_trigger_names(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     name = req.params.get('name')
